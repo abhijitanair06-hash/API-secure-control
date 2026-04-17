@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="description" content="Secure API Access Control Dashboard — DBMS Project"/>
+  <title>API Access Control Dashboard</title>
+  <link rel="stylesheet" href="style.css"/>
+</head>
+<body>
+
+<div class="layout">
+
+  <!-- ═══════════════════════════════════════════════════
+       SIDEBAR
+  ════════════════════════════════════════════════════ -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-icon">🔐</div>
+      <div class="logo-text">API <span>Access</span><br>Control</div>
+    </div>
+
+    <nav class="nav">
+      <button class="nav-item active" onclick="showTab('dashboard')" id="nav-dashboard">
+        <span class="nav-icon">📊</span> Dashboard
+      </button>
+      <button class="nav-item" onclick="showTab('validate')" id="nav-validate">
+        <span class="nav-icon">✅</span> Validate Token
+      </button>
+      <button class="nav-item" onclick="showTab('tokens')" id="nav-tokens">
+        <span class="nav-icon">🔑</span> Tokens
+      </button>
+      <button class="nav-item" onclick="showTab('clients')" id="nav-clients">
+        <span class="nav-icon">👤</span> Clients
+      </button>
+      <button class="nav-item" onclick="showTab('requests')" id="nav-requests">
+        <span class="nav-icon">📋</span> Request Logs
+      </button>
+      <button class="nav-item" onclick="showTab('audit')" id="nav-audit">
+        <span class="nav-icon">🔍</span> Audit Log
+      </button>
+      <button class="nav-item" onclick="showTab('issue')" id="nav-issue">
+        <span class="nav-icon">➕</span> Issue Token
+      </button>
+      <button class="nav-item" onclick="showTab('revoke')" id="nav-revoke">
+        <span class="nav-icon">🚫</span> Revoke Token
+      </button>
+    </nav>
+
+    <div class="sidebar-footer">
+      DBMS Project · 2026<br>
+      Backend: <span style="color:#6382ff">localhost:5000</span>
+    </div>
+  </aside>
+
+  <!-- ═══════════════════════════════════════════════════
+       MAIN CONTENT
+  ════════════════════════════════════════════════════ -->
+  <main class="main">
+
+    <!-- Top bar -->
+    <div class="topbar">
+      <div>
+        <div class="page-title" id="pageTitle">Dashboard</div>
+        <div class="page-subtitle" id="pageSubtitle">System overview and live statistics</div>
+      </div>
+      <div class="server-badge">
+        <span class="dot" id="serverDot"></span>
+        <span id="serverStatus">Checking…</span>
+      </div>
+    </div>
+
+    <!-- ─────────────────────────────────────────
+         TAB: DASHBOARD
+    ──────────────────────────────────────────── -->
+    <div class="tab-page active" id="tab-dashboard">
+
+      <div class="stats-grid" id="statsGrid">
+        <div class="stat-card blue"><div class="stat-label">Total Clients</div><div class="stat-value" id="s-clients">—</div><div class="stat-sub">Registered apps</div></div>
+        <div class="stat-card green"><div class="stat-label">Active Tokens</div><div class="stat-value" id="s-active">—</div><div class="stat-sub">Currently valid</div></div>
+        <div class="stat-card yellow"><div class="stat-label">Expired Tokens</div><div class="stat-value" id="s-expired">—</div><div class="stat-sub">Past expiry</div></div>
+        <div class="stat-card red"><div class="stat-label">Revoked Tokens</div><div class="stat-value" id="s-revoked">—</div><div class="stat-sub">Manually revoked</div></div>
+        <div class="stat-card accent"><div class="stat-label">Total Requests</div><div class="stat-value" id="s-total">—</div><div class="stat-sub">All API calls</div></div>
+        <div class="stat-card green"><div class="stat-label">Allowed</div><div class="stat-value" id="s-allowed">—</div><div class="stat-sub">Access granted</div></div>
+        <div class="stat-card red"><div class="stat-label">Denied</div><div class="stat-value" id="s-denied">—</div><div class="stat-sub">Access blocked</div></div>
+      </div>
+
+      <!-- Flow diagram -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">🔄 How Token Validation Works</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:0;flex-wrap:wrap;font-size:13px;font-weight:600;">
+          <div style="background:rgba(96,165,250,0.1);border:1px solid rgba(96,165,250,0.3);border-radius:10px;padding:12px 18px;text-align:center;color:#60a5fa;">
+            🌐 API Request<br><span style="font-size:11px;font-weight:400;color:#94a3b8;">with token</span>
+          </div>
+          <div style="padding:0 8px;color:#4a5568;font-size:20px;">→</div>
+          <div style="background:rgba(99,130,255,0.1);border:1px solid rgba(99,130,255,0.3);border-radius:10px;padding:12px 18px;text-align:center;color:#6382ff;">
+            🐍 Flask Backend<br><span style="font-size:11px;font-weight:400;color:#94a3b8;">app.py + routes</span>
+          </div>
+          <div style="padding:0 8px;color:#4a5568;font-size:20px;">→</div>
+          <div style="background:rgba(167,139,250,0.1);border:1px solid rgba(167,139,250,0.3);border-radius:10px;padding:12px 18px;text-align:center;color:#a78bfa;">
+            🗄️ MySQL DB<br><span style="font-size:11px;font-weight:400;color:#94a3b8;">stored procedure</span>
+          </div>
+          <div style="padding:0 8px;color:#4a5568;font-size:20px;">→</div>
+          <div style="background:rgba(34,211,160,0.1);border:1px solid rgba(34,211,160,0.3);border-radius:10px;padding:12px 18px;text-align:center;color:#22d3a0;">
+            ✅ ALLOW<br><span style="font-size:11px;font-weight:400;color:#94a3b8;">or DENY</span>
+          </div>
+        </div>
+
+        <div style="margin-top:20px;display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;">
+          <div style="background:rgba(99,130,255,0.05);border-radius:10px;padding:14px;">
+            <div style="font-size:12px;font-weight:700;color:#6382ff;margin-bottom:6px;">5 Validation Checks</div>
+            <div style="font-size:12px;color:#94a3b8;line-height:1.8;">
+              1. Token exists in DB?<br>
+              2. Client is active?<br>
+              3. Token not revoked?<br>
+              4. Token not expired?<br>
+              5. Has required scope?
+            </div>
+          </div>
+          <div style="background:rgba(34,211,160,0.05);border-radius:10px;padding:14px;">
+            <div style="font-size:12px;font-weight:700;color:#22d3a0;margin-bottom:6px;">DBMS Features Used</div>
+            <div style="font-size:12px;color:#94a3b8;line-height:1.8;">
+              Stored Procedures<br>
+              Triggers (auto audit)<br>
+              Transactions<br>
+              Constraints + Indexes
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- ─────────────────────────────────────────
+         TAB: VALIDATE TOKEN
+    ──────────────────────────────────────────── -->
+    <div class="tab-page" id="tab-validate">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">✅ Validate an API Token</div>
+        </div>
+
+        <div class="form-grid">
+          <div class="form-group" style="grid-column:1/-1;">
+            <label for="val-token">Token Value</label>
+            <input type="text" id="val-token" placeholder="e.g. token_mobile_001"/>
+          </div>
+          <div class="form-group">
+            <label for="val-endpoint">API Endpoint</label>
+            <input type="text" id="val-endpoint" value="/api/v1/products"/>
+          </div>
+          <div class="form-group">
+            <label for="val-method">HTTP Method</label>
+            <select id="val-method">
+              <option>GET</option><option>POST</option>
+              <option>PUT</option><option>DELETE</option><option>PATCH</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="val-scope">Required Scope</label>
+            <select id="val-scope">
+              <option value="read:data">read:data</option>
+              <option value="write:data">write:data</option>
+              <option value="delete:data">delete:data</option>
+              <option value="read:users">read:users</option>
+              <option value="write:users">write:users</option>
+              <option value="admin:all">admin:all</option>
+            </select>
+          </div>
+        </div>
+
+        <button class="btn btn-primary" onclick="validateToken()" id="val-btn">
+          🔐 Validate Token
+        </button>
+
+        <div class="result-box" id="val-result">
+          <div class="result-verdict" id="val-verdict"></div>
+          <div class="result-details">
+            <div class="result-reason" id="val-reason"></div>
+            <div class="result-hash" id="val-hash"></div>
+          </div>
+        </div>
+
+        <!-- Quick test tokens -->
+        <div style="margin-top:24px;">
+          <div style="font-size:12px;font-weight:600;color:#94a3b8;margin-bottom:10px;">QUICK TEST TOKENS</div>
+          <div style="display:flex;flex-wrap:wrap;gap:8px;">
+            <button class="btn btn-ghost" style="font-size:11px;" onclick="quickTest('token_mobile_001','read:data','allowed')">
+              ✅ Mobile (valid)
+            </button>
+            <button class="btn btn-ghost" style="font-size:11px;" onclick="quickTest('token_mobile_001','delete:data','denied')">
+              ❌ Mobile (wrong scope)
+            </button>
+            <button class="btn btn-ghost" style="font-size:11px;" onclick="quickTest('token_report_old','read:data','expired')">
+              ⏰ Expired token
+            </button>
+            <button class="btn btn-ghost" style="font-size:11px;" onclick="quickTest('token_legacy_001','read:data','revoked')">
+              🚫 Revoked token
+            </button>
+            <button class="btn btn-ghost" style="font-size:11px;" onclick="quickTest('fake_token_xyz','read:data','notfound')">
+              ❓ Unknown token
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ─────────────────────────────────────────
+         TAB: TOKENS
+    ──────────────────────────────────────────── -->
+    <div class="tab-page" id="tab-tokens">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">🔑 All Tokens</div>
+          <button class="refresh-btn" onclick="loadTokens()">↻ Refresh</button>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>#</th><th>Client</th><th>Status</th><th>Issued</th><th>Expires</th><th>Scopes</th>
+              </tr>
+            </thead>
+            <tbody id="tokensBody">
+              <tr><td colspan="6" class="empty"><div class="spinner"></div></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ─────────────────────────────────────────
+         TAB: CLIENTS
+    ──────────────────────────────────────────── -->
+    <div class="tab-page" id="tab-clients">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">👤 API Clients</div>
+          <button class="refresh-btn" onclick="loadClients()">↻ Refresh</button>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>#</th><th>Name</th><th>Email</th><th>Status</th><th>Registered</th></tr>
+            </thead>
+            <tbody id="clientsBody">
+              <tr><td colspan="5" class="empty"><div class="spinner"></div></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ─────────────────────────────────────────
+         TAB: REQUEST LOGS
+    ──────────────────────────────────────────── -->
+    <div class="tab-page" id="tab-requests">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">📋 API Request Log</div>
+          <button class="refresh-btn" onclick="loadRequests()">↻ Refresh</button>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>#</th><th>Client</th><th>Method</th><th>Endpoint</th><th>Scope</th><th>Status</th><th>Reason</th><th>Time</th></tr>
+            </thead>
+            <tbody id="requestsBody">
+              <tr><td colspan="8" class="empty"><div class="spinner"></div></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ─────────────────────────────────────────
+         TAB: AUDIT LOG
+    ──────────────────────────────────────────── -->
+    <div class="tab-page" id="tab-audit">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">🔍 Security Audit Log</div>
+          <button class="refresh-btn" onclick="loadAudit()">↻ Refresh</button>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>#</th><th>Event</th><th>Table</th><th>Record ID</th><th>Old Value</th><th>New Value</th><th>Time</th></tr>
+            </thead>
+            <tbody id="auditBody">
+              <tr><td colspan="7" class="empty"><div class="spinner"></div></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ─────────────────────────────────────────
+         TAB: ISSUE TOKEN
+    ──────────────────────────────────────────── -->
+    <div class="tab-page" id="tab-issue">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">➕ Issue New Token</div>
+        </div>
+
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="iss-client">Client</label>
+            <select id="iss-client">
+              <option value="">Loading clients…</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="iss-days">Valid for (days)</label>
+            <input type="number" id="iss-days" value="30" min="1" max="365"/>
+          </div>
+          <div class="form-group" style="grid-column:1/-1;">
+            <label>Scopes (select all that apply)</label>
+            <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:4px;" id="scope-checkboxes">
+              Loading…
+            </div>
+          </div>
+        </div>
+
+        <button class="btn btn-primary" onclick="issueToken()" id="iss-btn">
+          🔑 Issue Token
+        </button>
+
+        <div id="iss-result" style="margin-top:16px;display:none;">
+          <div style="background:var(--green-bg);border:1px solid rgba(34,211,160,0.3);border-radius:12px;padding:20px;">
+            <div style="font-size:12px;color:#22d3a0;font-weight:700;margin-bottom:8px;">✅ TOKEN ISSUED SUCCESSFULLY</div>
+            <div style="font-size:11px;color:#94a3b8;margin-bottom:6px;">Token Value (show only once — save it now!):</div>
+            <div style="background:#0a0e1a;border-radius:8px;padding:12px;font-family:'JetBrains Mono',monospace;font-size:12px;color:#a78bfa;word-break:break-all;" id="iss-token-val"></div>
+            <div style="font-size:11px;color:#94a3b8;margin-top:8px;">Token ID: <span id="iss-token-id" style="color:#6382ff;font-weight:600;"></span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ─────────────────────────────────────────
+         TAB: REVOKE TOKEN
+    ──────────────────────────────────────────── -->
+    <div class="tab-page" id="tab-revoke">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">🚫 Revoke a Token</div>
+        </div>
+        <div class="form-group" style="max-width:500px;">
+          <label for="rev-token">Token Value to Revoke</label>
+          <input type="text" id="rev-token" placeholder="Enter exact token string…"/>
+        </div>
+        <div style="margin-top:16px;display:flex;gap:12px;">
+          <button class="btn btn-danger" onclick="revokeToken()" id="rev-btn">
+            🚫 Revoke Token
+          </button>
+        </div>
+        <div id="rev-result" style="margin-top:16px;display:none;font-size:14px;font-weight:600;padding:16px;border-radius:10px;"></div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- Toast notification -->
+<div id="toast"></div>
+
+<script src="script.js"></script>
+</body>
+</html>
